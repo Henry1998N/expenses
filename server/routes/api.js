@@ -44,11 +44,9 @@ router.get("/expenses", function (req, res) {
 });
 router.post("/expense", function (req, res) {
   let body = req.body;
-
   let newDate = body.date
     ? moment(body.date).format("LLLL")
     : moment(new Date()).format("LLLL");
-  console.log(newDate);
   let newExpense = new Expense({
     amount: body?.amount,
     group: body?.group,
@@ -67,7 +65,7 @@ router.post("/expense", function (req, res) {
       console.log(err);
     });
 });
-router.put("/update/:group1/:group2", function (req, res) {
+const findOneAndUpdateByGroup = function (req, res) {
   Expense.findOneAndUpdate(req.params.group1, { group: req.params.group2 })
     .then((expense) => {
       res.send(expense);
@@ -75,36 +73,41 @@ router.put("/update/:group1/:group2", function (req, res) {
     .catch((err) => {
       console.log(err);
     });
+};
+router.put("/update/:group1/:group2", function (req, res) {
+  findOneAndUpdateByGroup(req, res);
 });
 
+const getExpensesByGroup = function (req, res) {
+  Expense.find({ group: req.params.group })
+    .then((expenses) => {
+      res.status(200).send(expenses);
+    })
+    .catch((err) => res.status(409).send(err));
+};
+const getExpensesByGroupAndAggrate = function (req, res) {
+  Expense.aggregate([
+    { $match: { group: req.params.group } },
+    {
+      $group: {
+        _id: "$group",
+        total: { $sum: "$amount" },
+      },
+    },
+  ])
+    .then((total) => {
+      res.status(200).send(total);
+    })
+    .catch((err) => {
+      res.status(409).send(err);
+    });
+};
 router.get("/expenses/:group", function (req, res) {
   let total = req.query?.total;
-
   if (total === "true") {
-    Expense.aggregate([
-      { $match: { group: req.params.group } },
-      {
-        $group: {
-          _id: "$group",
-          total: { $sum: "$amount" },
-        },
-      },
-    ])
-      .then((total) => {
-        res.status(200).send(total);
-      })
-      .catch((err) => {
-        res.status(409).send(err);
-      });
+    getExpensesByGroupAndAggrate(req, res);
   } else {
-    Expense.find({ group: req.params.group })
-      .then((expenses) => {
-        res.status(200).send(expenses);
-      })
-      .then((expenses) => {
-        res.status(200).send(expenses);
-      })
-      .catch((err) => res.status(409).send(err));
+    getExpensesByGroup(req, res);
   }
 });
 
