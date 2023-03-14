@@ -7,8 +7,8 @@ const formatDate = function (date) {
   return moment(date).format("YYYY-MM-DD");
 };
 const formatToJson = function (expense) {
-  let exp = JSON.stringify(expense);
-  d1 = JSON.parse(exp);
+  let expenseString = JSON.stringify(expense);
+  let d1 = JSON.parse(expenseString);
   d1 = d1[0].date;
   return formatDate(d1);
 };
