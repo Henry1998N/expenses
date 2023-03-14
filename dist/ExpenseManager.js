@@ -1,0 +1,4 @@
+class ExpenseManager {
+  addExpense() {}
+  getExpenses() {}
+}
